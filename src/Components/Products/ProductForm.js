@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Button } from 'react-bootstrap';
 import './ProductForm.css';
 import { Productaction } from '../../Store/product';
 
+const cities = ['Bengaluru', 'Mumbai', 'New Delhi', 'Pune'];
+
 const ProductForm = () => {
   const [product, setProduct] = useState({
-    Stays: 'Villas', // Default value for Stays
+    Stays: '',
     Name: '',
     City: '',
     Address: '',
@@ -16,8 +17,9 @@ const ProductForm = () => {
     AC: 0,
     NonAc: 0
   });
-  const [selectedFiles, setSelectedFiles] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
+  const [isOtherCity, setIsOtherCity] = useState(false);
+
   const dispatch = useDispatch();
   const editingProduct = useSelector(state => state.product.editingProduct);
 
@@ -32,36 +34,8 @@ const ProductForm = () => {
     }
   }, [editingProduct]);
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setProduct((prev) => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const fileChangeHandler = (event) => {
-    setSelectedFiles(Array.from(event.target.files));
-  };
-
   const addOrUpdateItemHandler = async () => {
     try {
-      let imageUrls = product.ImageUrls || [];
-      if (selectedFiles.length > 0) {
-        const storage = getStorage();
-        const uploadPromises = selectedFiles.map((file) => {
-          const storageRef = ref(storage, `products/${file.name}`);
-          return uploadBytes(storageRef, file).then(() => getDownloadURL(storageRef));
-        });
-
-        imageUrls = await Promise.all(uploadPromises);
-      }
-
-      const updatedProduct = {
-        ...product,
-        ImageUrls: imageUrls,
-      };
-
       const method = isEdit ? 'PATCH' : 'POST';
       const productType = product.Stays.toLowerCase();
       const url = isEdit
@@ -70,7 +44,7 @@ const ProductForm = () => {
 
       const response = await fetch(url, {
         method: method,
-        body: JSON.stringify(updatedProduct),
+        body: JSON.stringify(product),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -81,7 +55,7 @@ const ProductForm = () => {
       }
 
       if (isEdit) {
-        dispatch(Productaction.updateItem(updatedProduct));
+        dispatch(Productaction.updateItem(product));
         setIsEdit(false);
       }
 
@@ -91,13 +65,55 @@ const ProductForm = () => {
     }
   };
 
+  const StaysChange = (event) => {
+    setProduct({ ...product, Stays: event.target.value });
+  };
+
+  const NameChange = (event) => {
+    setProduct({ ...product, Name: event.target.value });
+  };
+
+  const CityChange = (event) => {
+    const value = event.target.value;
+    if (value === 'Other') {
+      setIsOtherCity(true);
+      setProduct({ ...product, City: '' });
+    } else {
+      setIsOtherCity(false);
+      setProduct({ ...product, City: value });
+    }
+  };
+
+  const AddressChange = (event) => {
+    setProduct({ ...product, Address: event.target.value });
+  };
+
+  const PriceChange = (event) => {
+    setProduct({ ...product, Price: event.target.value });
+  };
+
+  const imageHandler = (event) => {
+    const imageUrls = [...product.ImageUrls];
+    imageUrls[parseInt(event.target.id.replace('image', '')) - 1] = event.target.value;
+    setProduct({ ...product, ImageUrls: imageUrls });
+  };
+
+  const AcChange = (event) => {
+    setProduct({ ...product, AC: parseInt(event.target.value) });
+  };
+
+  const NonAcChange = (event) => {
+    setProduct({ ...product, NonAc: parseInt(event.target.value) });
+  };
+
   return (
     <div className="product-form">
       <form>
         <div className="form-line">
           <div className="form-group">
             <label>Stays</label>
-            <select name="Stays" onChange={handleChange} value={product.Stays}>
+            <select name="Stays" onChange={StaysChange} value={product.Stays}>
+              <option value='default'>Select one</option>
               <option value="Villas">Villas</option>
               <option value="Apartment">Apartment</option>
               <option value="HouseBoats">HouseBoats</option>
@@ -106,40 +122,47 @@ const ProductForm = () => {
           </div>
           <div className="form-group">
             <label htmlFor='name'>Name</label>
-            <input type='text' id='name' name="Name" onChange={handleChange} value={product.Name} />
+            <input type='text' id='name' name="Name" onChange={NameChange} value={product.Name} />
           </div>
           <div className="form-group">
             <label htmlFor='city'>City</label>
-            <select name="City" onChange={handleChange} value={product.City}>
-              <option>Bengaluru</option>
-              <option>Mumbai</option>
-              <option>New Delhi</option>
-              <option>Pune</option>
-            </select>
+            {!isOtherCity ? (
+              <select name="City" onChange={CityChange} value={product.City}>
+                <option value=''>Select a city</option>
+                {cities.map(city => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+                <option value='Other'>Other</option>
+              </select>
+            ) : (
+              <input type='text' id='city' name="City" onChange={(e) => setProduct({ ...product, City: e.target.value })} value={product.City} />
+            )}
           </div>
         </div>
         <div className="form-line">
           <div className="form-group">
             <label htmlFor='address'>Address</label>
-            <input type='text' id='address' name="Address" onChange={handleChange} value={product.Address} />
+            <input type='text' id='address' name="Address" onChange={AddressChange} value={product.Address} />
           </div>
           <div className="form-group">
             <label htmlFor='price'>Price</label>
-            <input type='number' id='price' name="Price" onChange={handleChange} value={product.Price} />
+            <input type='number' id='price' name="Price" onChange={PriceChange} value={product.Price} />
           </div>
           <div className="form-group">
             <label htmlFor='image'>Images</label>
-            <input type='file' id='image' multiple onChange={fileChangeHandler} />
+            <input type='url' id='image1' onChange={imageHandler} />
+            <input type='url' id='image2' onChange={imageHandler} />
+            <input type='url' id='image3' onChange={imageHandler} />
           </div>
         </div>
         <div className="form-line">
           <div className="form-group">
             <label htmlFor='AC'>AC Rooms</label>
-            <input type='number' id='AC' name="AC" onChange={handleChange} value={product.AC} />
+            <input type='number' id='AC' name="AC" onChange={AcChange} value={product.AC} />
           </div>
           <div className="form-group">
             <label htmlFor='NonAc'>Non-AC Rooms</label>
-            <input type='number' id='NonAc' name="NonAc" onChange={handleChange} value={product.NonAc} />
+            <input type='number' id='NonAc' name="NonAc" onChange={NonAcChange} value={product.NonAc} />
           </div>
         </div>
         <div className="form-group">
