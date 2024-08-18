@@ -1,0 +1,48 @@
+.booking-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .booking-list {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .booking-item {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f9f9f9;
+  }
+  
+  .booking-details h2 {
+    margin: 0;
+    font-size: 1.5em;
+    color: #333;
+  }
+  
+  .image-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .image-container img {
+    width: 150px; /* Adjust size as needed */
+    height: auto;
+    border-radius: 4px;
+  }
+  
+  .details-container {
+    margin-top: 10px;
+  }
+  
+  .details-container p {
+    margin: 5px 0;
+  }
+  
+  .details-container strong {
+    color: #555;
+  }
+  

@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { NavLink } from 'react-router-dom';
 
 const Navigation = () => {
-  const LoginStatus = useSelector(state => state.auth.LoginStatus);
+  const LoginStatus = useSelector((state) => state.auth.LoginStatus);
 
   return (
     <div>
@@ -16,9 +16,14 @@ const Navigation = () => {
       </ul>
       <ul>
         {LoginStatus && (
-          <li>
-            <NavLink to='/product'>Product</NavLink>
-          </li>
+          <div>
+            <li>
+              <NavLink to='/product'>Product</NavLink>
+            </li>
+            <li>
+              <NavLink to='/Book'>Booking</NavLink> 
+            </li>
+          </div>
         )}
       </ul>
     </div>
